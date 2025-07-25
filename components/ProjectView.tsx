@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useRef } from 'react';
 import { Ticket, Categories, ProjectType, TicketStatus } from '../types';
 import TicketCard from './TicketCard';
@@ -11,6 +12,7 @@ interface ProjectViewProps {
     onOpenModal: (id?: number) => void;
     onDeleteTicket: (id: number) => void;
     onCompleteTicket: (id: number) => void;
+    isViewOnly: boolean;
 }
 
 const ProjectColumn: React.FC<{
@@ -28,7 +30,8 @@ const ProjectColumn: React.FC<{
     categories: Categories;
     onDeleteTicket: (id: number) => void;
     onCompleteTicket: (id: number) => void;
-}> = ({ title, tickets, onCardClick, onDragStart, onDragOver, onDrop, onDragLeave, isDraggingOver, placeholderHeight, dropIndex, categories, onDeleteTicket, onCompleteTicket }) => {
+    isViewOnly: boolean;
+}> = ({ title, tickets, onCardClick, onDragStart, onDragOver, onDrop, onDragLeave, isDraggingOver, placeholderHeight, dropIndex, categories, onDeleteTicket, onCompleteTicket, isViewOnly }) => {
     
     const inProgressTickets = tickets.filter(t => t.status === TicketStatus.Ejecucion);
     const otherTickets = tickets.filter(t => t.status !== TicketStatus.Ejecucion);
@@ -42,6 +45,7 @@ const ProjectColumn: React.FC<{
             onDragStart={(e) => onDragStart(e, ticket.id)}
             onDelete={onDeleteTicket}
             onComplete={onCompleteTicket}
+            isViewOnly={isViewOnly}
         />
     );
 
@@ -96,7 +100,7 @@ const ProjectColumn: React.FC<{
     );
 }
 
-const ProjectView: React.FC<ProjectViewProps> = ({ tickets, categories, teams, onTicketOrderChange, onOpenModal, onDeleteTicket, onCompleteTicket }) => {
+const ProjectView: React.FC<ProjectViewProps> = ({ tickets, categories, teams, onTicketOrderChange, onOpenModal, onDeleteTicket, onCompleteTicket, isViewOnly }) => {
     const [draggedTicketId, setDraggedTicketId] = useState<number | null>(null);
     const [dragOverProject, setDragOverProject] = useState<ProjectType | null>(null);
     const [dropIndicator, setDropIndicator] = useState<{ project: ProjectType; index: number } | null>(null);
@@ -104,6 +108,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ tickets, categories, teams, o
     const dragLeaveTimeout = useRef<number | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, ticketId: number) => {
+        if (isViewOnly) return;
         setDraggedTicketId(ticketId);
         e.dataTransfer.effectAllowed = 'move';
         
@@ -199,6 +204,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ tickets, categories, teams, o
                         dropIndex={dropIndicator?.project === team ? dropIndicator.index : -1}
                         onDeleteTicket={onDeleteTicket}
                         onCompleteTicket={onCompleteTicket}
+                        isViewOnly={isViewOnly}
                     />
                 );
             })}
