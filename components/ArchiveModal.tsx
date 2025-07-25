@@ -11,9 +11,9 @@ interface ArchiveModalProps {
 }
 
 const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, tickets, categories }) => {
-    const finishedTickets = tickets
+    const finishedTickets = (tickets || [])
         .filter(t => t && t.status === 'terminado')
-        .sort((a, b) => new Date(b.completionDate || 0).getTime() - new Date(a.completionDate || 0).getTime());
+        .sort((a, b) => new Date(b?.completionDate || 0).getTime() - new Date(a?.completionDate || 0).getTime());
     
     const categoryColor = (catName: string) => categories[catName]?.color || '#5e5e5e';
 
