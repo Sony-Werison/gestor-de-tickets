@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { Ticket, Categories, ProjectType, TicketStatus } from '../types';
 
@@ -14,6 +15,7 @@ interface TimelineViewProps {
     allowTeamParallelism: boolean;
     prioritizeExecuting: boolean;
     avoidTimelineGaps: boolean;
+    isViewOnly: boolean;
 }
 
 interface DragState {
@@ -60,6 +62,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     allowTeamParallelism, 
     prioritizeExecuting,
     avoidTimelineGaps,
+    isViewOnly,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [dragState, setDragState] = useState<DragState | null>(null);
@@ -361,7 +364,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     }, [dragState, handleMouseMove, handleMouseUp]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, ticket: Ticket, interactionType: 'move' | 'resize') => {
-        if (e.button !== 0) return;
+        if (isViewOnly || e.button !== 0) return;
         e.preventDefault();
         e.stopPropagation();
 
@@ -378,7 +381,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
             ghostX: e.clientX,
             ghostY: e.clientY,
         });
-    }, []);
+    }, [isViewOnly]);
 
     const getTicketRenderData = (ticket: Ticket) => {
         const startDate = new Date(`${ticket.startDate}T12:00:00Z`);
@@ -519,10 +522,12 @@ const TimelineView: React.FC<TimelineViewProps> = ({
         <div className="grid grid-cols-1">
             <div className="bg-gray-800/50 p-4 rounded-lg">
                 <div className="flex items-center gap-4 mb-4 flex-wrap">
-                     <button onClick={onOpenSettings} className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 flex items-center gap-2 flex-shrink-0">
-                        <SettingsIcon />
-                        Configurar
-                    </button>
+                     {!isViewOnly && (
+                        <button onClick={onOpenSettings} className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 flex items-center gap-2 flex-shrink-0">
+                            <SettingsIcon />
+                            Configurar
+                        </button>
+                     )}
                     <div className="ml-auto flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-300">Zoom:</span>
