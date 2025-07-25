@@ -1,0 +1,5 @@
+{
+  "name": "Advanced Ticket Manager",
+  "description": "A sophisticated ticket and project management tool featuring multiple views (Kanban, Category, Project, Timeline) for easy organization and planning. Built with React and TypeScript, this is a fully client-side application.",
+  "requestFramePermissions": []
+}
