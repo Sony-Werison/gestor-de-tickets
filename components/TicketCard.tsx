@@ -12,13 +12,6 @@ interface TicketCardProps {
     onComplete: (id: number) => void;
 }
 
-const ExecutingSeal = () => (
-    <div className="relative flex h-3 w-3 flex-shrink-0" title="En Ejecución">
-        <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></div>
-        <div className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></div>
-    </div>
-);
-
 const CheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -56,7 +49,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, category, viewType = 's
                     </span>
                 )}
                 <div className="flex-1 flex items-center gap-2 overflow-hidden">
-                    {ticket.status === TicketStatus.Ejecucion && <ExecutingSeal />}
                     <p className="font-medium text-gray-300 text-sm whitespace-nowrap truncate">{ticket.title}</p>
                     <span className="flex-shrink-0 px-1.5 py-0.5 text-[11px] rounded font-medium whitespace-nowrap bg-gray-600/50 text-gray-300">
                         {ticket.project}
