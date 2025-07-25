@@ -12,7 +12,7 @@ interface ArchiveModalProps {
 
 const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, tickets, categories }) => {
     const finishedTickets = tickets
-        .filter(t => t.status === 'terminado')
+        .filter(t => t && t.status === 'terminado')
         .sort((a, b) => new Date(b.completionDate || 0).getTime() - new Date(a.completionDate || 0).getTime());
     
     const categoryColor = (catName: string) => categories[catName]?.color || '#5e5e5e';
@@ -42,7 +42,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, tickets, c
                                                         <span className="text-gray-500 font-medium w-6 text-right text-sm">{ticket.id}</span>
                                                         <p className="font-medium text-gray-300 flex-1 text-sm">{ticket.title}</p>
                                                         <span className="text-xs text-gray-400 whitespace-nowrap">
-                                                            {new Date(ticket.completionDate!).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                            {ticket.completionDate ? new Date(ticket.completionDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}
                                                         </span>
                                                     </div>
                                                 </div>
