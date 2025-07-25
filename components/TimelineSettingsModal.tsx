@@ -48,13 +48,13 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
     return (
         <Modal isOpen={isOpen} onClose={onClose} maxWidthClass="max-w-2xl">
             <div className="flex justify-between items-center p-4 border-b border-gray-700">
-                <h3 className="text-xl font-bold">Configurações da Linha do Tempo</h3>
+                <h3 className="text-xl font-bold">Configuración de la Línea de Tiempo</h3>
                 <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
             <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 {/* Scheduling Logic Section */}
                 <div className="space-y-4 p-4 bg-gray-800/50 rounded-lg">
-                    <h4 className="text-lg font-semibold text-purple-300">Lógica de Agendamento e Prioridade</h4>
+                    <h4 className="text-lg font-semibold text-purple-300">Lógica de Programación y Prioridad</h4>
                     <div className="space-y-3">
                         <div className="flex items-center gap-3">
                              <input
@@ -65,7 +65,7 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
                                 className="h-5 w-5 rounded border-gray-500 text-blue-500 focus:ring-blue-500 bg-gray-700 cursor-pointer"
                             />
                             <label htmlFor="avoid-gaps-toggle" className="text-md font-medium text-gray-200 cursor-pointer">
-                                Preencher lacunas automaticamente
+                                Rellenar huecos automáticamente
                             </label>
                         </div>
                         <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
                                 className="h-5 w-5 rounded border-gray-500 text-blue-500 focus:ring-blue-500 bg-gray-700 cursor-pointer"
                             />
                             <label htmlFor="parallel-toggle-modal" className="text-md font-medium text-gray-200 cursor-pointer">
-                                Permitir paralelismo entre equipes
+                                Permitir paralelismo entre equipos
                             </label>
                         </div>
                          <div className="flex items-center gap-3">
@@ -89,24 +89,24 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
                                 className="h-5 w-5 rounded border-gray-500 text-blue-500 focus:ring-blue-500 bg-gray-700 cursor-pointer"
                             />
                             <label htmlFor="priority-toggle-modal" className="text-md font-medium text-gray-200 cursor-pointer">
-                                Prioridade Estrita para Tickets 'Em Execução'
+                                Prioridad Estricta para Tickets 'En Ejecución'
                             </label>
                         </div>
                     </div>
                      <p className="text-sm text-gray-400 pt-2">
-                        Ajuste como os tickets são organizados. Ativar "Preencher lacunas" força os tickets a se encadearem, a menos que um ticket seja explicitamente independente.
+                        Ajusta cómo se organizan los tickets. Activar "Rellenar huecos" fuerza a que los tickets se encadenen, a menos que un ticket sea explícitamente independiente.
                     </p>
                     <div className="pt-2">
-                        <h5 className="font-semibold text-gray-200 mb-1">Encadeamento e Dependências</h5>
+                        <h5 className="font-semibold text-gray-200 mb-1">Encadenamiento y Dependencias</h5>
                         <p className="text-sm text-gray-400">
-                            Ao editar um ticket, marque "Depende do ticket anterior" para que sua data de início seja calculada automaticamente com base no término do anterior. Tickets não dependentes criam "ilhas" de trabalho.
+                           Al editar un ticket, marca "Depende del ticket anterior" para que su fecha de inicio se calcule automáticamente basándose en la finalización del anterior. Los tickets no dependientes crean "islas" de trabajo.
                         </p>
                     </div>
                 </div>
 
                 {/* Holiday Management Section */}
                 <div className="space-y-4 p-4 bg-gray-800/50 rounded-lg">
-                    <h4 className="text-lg font-semibold text-purple-300">Gerenciar Feriados e Dias Não-Úteis</h4>
+                    <h4 className="text-lg font-semibold text-purple-300">Gestionar Fiestas y Días No Laborables</h4>
                     <form onSubmit={handleAddHoliday} className="flex items-center gap-3">
                         <input
                             type="date"
@@ -116,7 +116,7 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
                             required
                         />
                         <button type="submit" className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 font-semibold">
-                            Adicionar
+                            Añadir
                         </button>
                     </form>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
@@ -124,19 +124,19 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
                             holidays.map((holiday) => (
                                 <div key={holiday} className="flex items-center justify-between p-2 bg-gray-700/60 rounded-md">
                                     <span className="text-sm text-gray-300 font-mono">
-                                        {new Date(holiday + 'T12:00:00Z').toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                        {new Date(holiday + 'T12:00:00Z').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </span>
                                     <button
                                         onClick={() => onRemoveHoliday(holiday)}
                                         className="p-1.5 rounded-full bg-red-600/80 hover:bg-red-500 text-white"
-                                        title="Remover Feriado"
+                                        title="Eliminar Festivo"
                                     >
                                         <TrashIcon />
                                     </button>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-center text-gray-500 text-sm py-4">Não há feriados cadastrados.</p>
+                            <p className="text-center text-gray-500 text-sm py-4">No hay días festivos registrados.</p>
                         )}
                     </div>
                 </div>
@@ -145,7 +145,7 @@ const TimelineSettingsModal: React.FC<TimelineSettingsModalProps> = ({
             {/* Modal Footer */}
             <div className="p-4 bg-gray-800/50 flex justify-end">
                 <button onClick={onClose} className="px-6 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-500 font-semibold">
-                    Fechar
+                    Cerrar
                 </button>
             </div>
         </Modal>
