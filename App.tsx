@@ -189,15 +189,22 @@ const App: React.FC = () => {
                 const teamTickets = sortedTickets.filter(t => t.project === team);
                 processScope(teamTickets);
             });
+            // Ensure any tickets with a project not in the team list are still included
+            const processedIds = new Set(newTicketsMap.keys());
+            sortedTickets.forEach(t => {
+                if (!processedIds.has(t.id)) {
+                    newTicketsMap.set(t.id, t);
+                }
+            });
+
         } else {
             const activeTickets = sortedTickets.filter(t => t.status !== TicketStatus.Terminado);
             processScope(activeTickets);
+            const completedTickets = sortedTickets.filter(t => t.status === TicketStatus.Terminado);
+            completedTickets.forEach(t => newTicketsMap.set(t.id, t));
         }
-
-        const completedTickets = sortedTickets.filter(t => t.status === TicketStatus.Terminado);
-        completedTickets.forEach(t => newTicketsMap.set(t.id, t));
         
-        return sortedTickets.map(t => newTicketsMap.get(t.id)!);
+        return sortedTickets.map(t => newTicketsMap.get(t.id) || t);
     }, []);
 
     useEffect(() => {
