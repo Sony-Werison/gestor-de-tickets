@@ -10,6 +10,7 @@ interface TicketCardProps {
     onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
     onDelete: (id: number) => void;
     onComplete: (id: number) => void;
+    isViewOnly: boolean;
 }
 
 const CheckIcon = () => (
@@ -25,7 +26,7 @@ const TrashIcon = () => (
 );
 
 
-const TicketCard: React.FC<TicketCardProps> = ({ ticket, category, viewType = 'status', onClick, onDragStart, onDelete, onComplete }) => {
+const TicketCard: React.FC<TicketCardProps> = ({ ticket, category, viewType = 'status', onClick, onDragStart, onDelete, onComplete, isViewOnly }) => {
     const categoryColor = category?.color || '#5e5e5e';
     const completionDate = ticket.completionDate ? new Date(ticket.completionDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '';
     
@@ -33,9 +34,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, category, viewType = 's
         <div
             id={`ticket-${ticket.id}`}
             className="ticket-card group p-2 rounded-md cursor-pointer transition-colors duration-200 hover:bg-[#3a3a3a] relative"
-            draggable="true"
+            draggable={!isViewOnly}
             onClick={onClick}
-            onDragStart={onDragStart}
+            onDragStart={isViewOnly ? undefined : onDragStart}
         >
             <div className="flex items-center gap-2 pr-12">
                 <span className="text-gray-500 font-medium w-5 text-right text-xs">{ticket.id}</span>
@@ -59,22 +60,24 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, category, viewType = 's
                 )}
             </div>
 
-            <div className="absolute top-0 right-1 h-full flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                {ticket.status !== TicketStatus.Terminado && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); onComplete(ticket.id); }} 
-                    className="p-1.5 rounded-full bg-green-600/80 hover:bg-green-500 text-white" 
-                    title="Marcar como Completado">
-                    <CheckIcon />
-                  </button>
-                )}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onDelete(ticket.id); }} 
-                  className="p-1.5 rounded-full bg-red-600/80 hover:bg-red-500 text-white" 
-                  title="Eliminar Ticket">
-                  <TrashIcon />
-                </button>
-            </div>
+            {!isViewOnly && (
+                <div className="absolute top-0 right-1 h-full flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {ticket.status !== TicketStatus.Terminado && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onComplete(ticket.id); }} 
+                        className="p-1.5 rounded-full bg-green-600/80 hover:bg-green-500 text-white" 
+                        title="Marcar como Completado">
+                        <CheckIcon />
+                      </button>
+                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onDelete(ticket.id); }} 
+                      className="p-1.5 rounded-full bg-red-600/80 hover:bg-red-500 text-white" 
+                      title="Eliminar Ticket">
+                      <TrashIcon />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
