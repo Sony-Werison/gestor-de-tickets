@@ -21,6 +21,7 @@ interface KanbanColumnProps {
     dropIndex: number;
     onDeleteTicket: (id: number) => void;
     onCompleteTicket: (id: number) => void;
+    isViewOnly: boolean;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -41,7 +42,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     placeholderHeight,
     dropIndex,
     onDeleteTicket,
-    onCompleteTicket
+    onCompleteTicket,
+    isViewOnly
 }) => {
     const ticketElements = tickets.map(ticket => (
         <TicketCard
@@ -52,6 +54,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
             onDragStart={(e) => onDragStart(e, ticket.id)}
             onDelete={onDeleteTicket}
             onComplete={onCompleteTicket}
+            isViewOnly={isViewOnly}
         />
     ));
 
