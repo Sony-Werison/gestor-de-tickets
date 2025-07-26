@@ -17,7 +17,7 @@ const App: React.FC = () => {
     const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
     const [categories, setCategories] = useState<Categories>(INITIAL_CATEGORIES);
     const [teams, setTeams] = useState<ProjectType[]>(INITIAL_TEAMS);
-    const [activeView, setActiveView] = useState<View>('timeline');
+    const [activeView, setActiveView] = useState<View>('status');
     
     const [isTicketModalOpen, setTicketModalOpen] = useState(false);
     const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -25,6 +25,14 @@ const App: React.FC = () => {
     const [isArchiveModalOpen, setArchiveModalOpen] = useState(false);
     const [isTimelineSettingsOpen, setTimelineSettingsOpen] = useState(false);
     const [ticketToEdit, setTicketToEdit] = useState<Ticket | null>(null);
+    const [isViewOnly, setIsViewOnly] = useState(false);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('viewOnly') === 'true') {
+            setIsViewOnly(true);
+        }
+    }, []);
 
     const [holidays, setHolidays] = useState<string[]>(() => {
         try {
@@ -189,15 +197,22 @@ const App: React.FC = () => {
                 const teamTickets = sortedTickets.filter(t => t.project === team);
                 processScope(teamTickets);
             });
+            // Ensure any tickets with a project not in the team list are still included
+            const processedIds = new Set(newTicketsMap.keys());
+            sortedTickets.forEach(t => {
+                if (!processedIds.has(t.id)) {
+                    newTicketsMap.set(t.id, t);
+                }
+            });
+
         } else {
             const activeTickets = sortedTickets.filter(t => t.status !== TicketStatus.Terminado);
             processScope(activeTickets);
+            const completedTickets = sortedTickets.filter(t => t.status === TicketStatus.Terminado);
+            completedTickets.forEach(t => newTicketsMap.set(t.id, t));
         }
-
-        const completedTickets = sortedTickets.filter(t => t.status === TicketStatus.Terminado);
-        completedTickets.forEach(t => newTicketsMap.set(t.id, t));
         
-        return sortedTickets.map(t => newTicketsMap.get(t.id)!);
+        return sortedTickets.map(t => newTicketsMap.get(t.id) || t);
     }, []);
 
     useEffect(() => {
@@ -207,11 +222,13 @@ const App: React.FC = () => {
 
     const handleOpenModal = useCallback((id?: number) => {
         const ticket = id ? tickets.find(t => t.id === id) || null : null;
+        if (!ticket && isViewOnly) return;
         setTicketToEdit(ticket);
         setTicketModalOpen(true);
-    }, [tickets]);
+    }, [tickets, isViewOnly]);
 
     const handleTicketSubmit = useCallback((ticketData: Omit<Ticket, 'status' | 'order' | 'completionDate' | 'startDate'> & { originalId?: number }) => {
+        if (isViewOnly) return;
         setTickets(prevTickets => {
             let newTickets;
             if (ticketData.originalId) { // Editing
@@ -229,9 +246,10 @@ const App: React.FC = () => {
             }
             return recalculateDependencies(newTickets, teams, holidays, allowTeamParallelism, avoidTimelineGaps);
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
     const handleTicketOrderChange = useCallback((draggedTicketId: number, targetStatus: TicketStatus, targetIndex: number) => {
+        if (isViewOnly) return;
         setTickets(prevTickets => {
             const ticketToMove = { ...prevTickets.find(t => t.id === draggedTicketId)! };
 
@@ -258,9 +276,10 @@ const App: React.FC = () => {
 
             return recalculateDependencies(ticketsWithNewOrder, teams, holidays, allowTeamParallelism, avoidTimelineGaps);
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
     
     const handleProjectAndOrderChange = useCallback((draggedTicketId: number, targetProject: ProjectType, targetIndex: number) => {
+        if (isViewOnly) return;
         setTickets(prevTickets => {
             const ticketToMove = { ...prevTickets.find(t => t.id === draggedTicketId)! };
             ticketToMove.project = targetProject;
@@ -284,10 +303,11 @@ const App: React.FC = () => {
     
             return recalculateDependencies(ticketsWithNewOrder, teams, holidays, allowTeamParallelism, avoidTimelineGaps);
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
 
     const handleTicketUpdate = useCallback((updatedTicket: Ticket) => {
+        if (isViewOnly) return;
         setTickets(prevTickets => {
             const activeTickets = prevTickets
                 .filter(t => t.status !== TicketStatus.Terminado)
@@ -319,19 +339,20 @@ const App: React.FC = () => {
     
             return recalculateDependencies(newFullList, teams, holidays, allowTeamParallelism, avoidTimelineGaps, updatedTicket.id);
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, prioritizeExecuting]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, prioritizeExecuting, isViewOnly]);
     
     const handleTimelineDragEnd = useCallback((updatedTicketsFromScope: Ticket[]) => {
+        if (isViewOnly) return;
         setTickets(prevTickets => {
             const updatedTicketsMap = new Map(updatedTicketsFromScope.map(t => [t.id, t]));
             const newTickets = prevTickets.map(t => updatedTicketsMap.get(t.id) || t);
             newTickets.sort((a,b) => a.order - b.order);
             return recalculateDependencies(newTickets, teams, holidays, allowTeamParallelism, avoidTimelineGaps);
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
     const handleAddHoliday = useCallback((dateStr: string) => {
-        if (!dateStr) return;
+        if (!dateStr || isViewOnly) return;
         setHolidays(prev => {
             const newHolidaysSet = new Set(prev);
             if (newHolidaysSet.has(dateStr)) {
@@ -342,9 +363,10 @@ const App: React.FC = () => {
             setTickets(currentTickets => recalculateDependencies(currentTickets, teams, sorted, allowTeamParallelism, avoidTimelineGaps));
             return sorted;
         });
-    }, [recalculateDependencies, teams, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
     const handleRemoveHoliday = useCallback((dateStr: string) => {
+        if (isViewOnly) return;
         setHolidays(prev => {
             const newHolidaysSet = new Set(prev);
             if (!newHolidaysSet.has(dateStr)) {
@@ -355,34 +377,39 @@ const App: React.FC = () => {
             setTickets(currentTickets => recalculateDependencies(currentTickets, teams, sorted, allowTeamParallelism, avoidTimelineGaps));
             return sorted;
         });
-    }, [recalculateDependencies, teams, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
     const handleToggleTeamParallelism = useCallback(() => {
+        if (isViewOnly) return;
         setAllowTeamParallelism(prev => {
             const newValue = !prev;
             setTickets(currentTickets => recalculateDependencies(currentTickets, teams, holidays, newValue, avoidTimelineGaps));
             return newValue;
         });
-    }, [recalculateDependencies, teams, holidays, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, avoidTimelineGaps, isViewOnly]);
     
     const handleTogglePrioritizeExecuting = useCallback(() => {
+        if (isViewOnly) return;
         setPrioritizeExecuting(prev => !prev);
-    }, []);
+    }, [isViewOnly]);
 
     const handleToggleAvoidTimelineGaps = useCallback(() => {
+        if (isViewOnly) return;
         setAvoidTimelineGaps(prev => {
             const newValue = !prev;
             setTickets(currentTickets => recalculateDependencies(currentTickets, teams, holidays, allowTeamParallelism, newValue));
             return newValue;
         });
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, isViewOnly]);
 
 
     const handleAddCategory = useCallback((name: string, color: string) => {
+        if (isViewOnly) return;
         setCategories(prev => ({ ...prev, [name]: { color } }));
-    }, []);
+    }, [isViewOnly]);
 
     const handleDeleteCategory = useCallback((name: string) => {
+        if (isViewOnly) return;
         if (Object.keys(categories).length <= 1) {
             alert("No se puede eliminar la última categoría.");
             return;
@@ -396,17 +423,19 @@ const App: React.FC = () => {
             delete newCats[name];
             return newCats;
         });
-    }, [categories, tickets]);
+    }, [categories, tickets, isViewOnly]);
     
     const handleAddTeam = useCallback((name: string) => {
+        if (isViewOnly) return;
         if (teams.includes(name)) {
             alert("Este equipo ya existe.");
             return;
         }
         setTeams(prev => [...prev, name]);
-    }, [teams]);
+    }, [teams, isViewOnly]);
 
     const handleDeleteTeam = useCallback((name: string) => {
+        if (isViewOnly) return;
         if (teams.length <= 1) {
             alert("Debe haber al menos un equipo.");
             return;
@@ -416,9 +445,10 @@ const App: React.FC = () => {
             return;
         }
         setTeams(prev => prev.filter(team => team !== name));
-    }, [teams, tickets]);
+    }, [teams, tickets, isViewOnly]);
 
     const handleDeleteTicket = useCallback((ticketId: number) => {
+        if (isViewOnly) return;
         if (window.confirm('¿Está seguro de que desea eliminar este ticket de forma permanente?')) {
             setTickets(prevTickets => {
                 const remainingTickets = prevTickets.filter(t => t.id !== ticketId);
@@ -426,12 +456,25 @@ const App: React.FC = () => {
                 return recalculateDependencies(reordered, teams, holidays, allowTeamParallelism, avoidTimelineGaps);
             });
         }
-    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps]);
+    }, [recalculateDependencies, teams, holidays, allowTeamParallelism, avoidTimelineGaps, isViewOnly]);
 
     const handleCompleteTicket = useCallback((ticketId: number) => {
+        if (isViewOnly) return;
         const targetListSize = tickets.filter(t => t.status === TicketStatus.Terminado).length;
         handleTicketOrderChange(ticketId, TicketStatus.Terminado, targetListSize);
-    }, [tickets, handleTicketOrderChange]);
+    }, [tickets, handleTicketOrderChange, isViewOnly]);
+
+    const handleShare = useCallback(async () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('viewOnly', 'true');
+        try {
+            await navigator.clipboard.writeText(url.toString());
+            alert('Enlace de solo lectura copiado al portapapeles!');
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+            alert('No se pudo copiar el enlace.');
+        }
+    }, []);
 
     const timelineTickets = useMemo(() => {
         return tickets
@@ -449,6 +492,7 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal} 
                             onDeleteTicket={handleDeleteTicket}
                             onCompleteTicket={handleCompleteTicket}
+                            isViewOnly={isViewOnly}
                         />;
             case 'category':
                 return <CategoryView 
@@ -456,7 +500,8 @@ const App: React.FC = () => {
                             categories={categories} 
                             onOpenModal={handleOpenModal}
                             onDeleteTicket={handleDeleteTicket}
-                            onCompleteTicket={handleCompleteTicket} 
+                            onCompleteTicket={handleCompleteTicket}
+                            isViewOnly={isViewOnly} 
                         />;
             case 'timeline':
                 return <TimelineView 
@@ -471,6 +516,7 @@ const App: React.FC = () => {
                             prioritizeExecuting={prioritizeExecuting}
                             avoidTimelineGaps={avoidTimelineGaps}
                             onOpenSettings={() => setTimelineSettingsOpen(true)}
+                            isViewOnly={isViewOnly}
                         />;
             case 'project':
                 return <ProjectView 
@@ -481,6 +527,7 @@ const App: React.FC = () => {
                             onOpenModal={handleOpenModal}
                             onDeleteTicket={handleDeleteTicket}
                             onCompleteTicket={handleCompleteTicket}
+                            isViewOnly={isViewOnly}
                         />;
             default:
                 return null;
@@ -492,9 +539,11 @@ const App: React.FC = () => {
             <Header
                 activeView={activeView}
                 onViewChange={setActiveView}
-                onManageCategories={() => setCategoryModalOpen(true)}
-                onManageTeams={() => setTeamModalOpen(true)}
+                onManageCategories={() => !isViewOnly && setCategoryModalOpen(true)}
+                onManageTeams={() => !isViewOnly && setTeamModalOpen(true)}
                 onShowArchive={() => setArchiveModalOpen(true)}
+                isViewOnly={isViewOnly}
+                onShare={handleShare}
             />
             <main className="p-6">
                 {renderView()}
@@ -508,16 +557,17 @@ const App: React.FC = () => {
                 categories={categories}
                 teams={teams}
                 tickets={tickets}
+                isViewOnly={isViewOnly}
             />
             <CategoryModal
-                isOpen={isCategoryModalOpen}
+                isOpen={isCategoryModalOpen && !isViewOnly}
                 onClose={() => setCategoryModalOpen(false)}
                 categories={categories}
                 onAddCategory={handleAddCategory}
                 onDeleteCategory={handleDeleteCategory}
             />
             <TeamModal
-                isOpen={isTeamModalOpen}
+                isOpen={isTeamModalOpen && !isViewOnly}
                 onClose={() => setTeamModalOpen(false)}
                 teams={teams}
                 onAddTeam={handleAddTeam}
@@ -530,7 +580,7 @@ const App: React.FC = () => {
                 categories={categories}
             />
              <TimelineSettingsModal
-                isOpen={isTimelineSettingsOpen}
+                isOpen={isTimelineSettingsOpen && !isViewOnly}
                 onClose={() => setTimelineSettingsOpen(false)}
                 allowTeamParallelism={allowTeamParallelism}
                 onToggleTeamParallelism={handleToggleTeamParallelism}

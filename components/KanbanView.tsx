@@ -10,9 +10,10 @@ interface KanbanViewProps {
     onOpenModal: (id?: number) => void;
     onDeleteTicket: (id: number) => void;
     onCompleteTicket: (id: number) => void;
+    isViewOnly: boolean;
 }
 
-const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOrderChange, onOpenModal, onDeleteTicket, onCompleteTicket }) => {
+const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOrderChange, onOpenModal, onDeleteTicket, onCompleteTicket, isViewOnly }) => {
     const [draggedTicketId, setDraggedTicketId] = useState<number | null>(null);
     const [dragOverStatus, setDragOverStatus] = useState<TicketStatus | null>(null);
     const [dropIndicator, setDropIndicator] = useState<{ status: TicketStatus; index: number } | null>(null);
@@ -20,6 +21,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOr
     const dragLeaveTimeout = useRef<number | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, ticketId: number) => {
+        if (isViewOnly) return;
         setDraggedTicketId(ticketId);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', ticketId.toString());
@@ -113,7 +115,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOr
                 status={TicketStatus.Proximos}
                 categories={categories}
                 onCardClick={onOpenModal}
-                onAddTicket={() => onOpenModal()}
+                onAddTicket={!isViewOnly ? () => onOpenModal() : undefined}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -123,6 +125,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOr
                 dropIndex={dropIndicator?.status === TicketStatus.Proximos ? dropIndicator.index : -1}
                 onDeleteTicket={onDeleteTicket}
                 onCompleteTicket={onCompleteTicket}
+                isViewOnly={isViewOnly}
             />
             <KanbanColumn
                 title={STATUS_TITLES.ejecucion}
@@ -142,6 +145,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOr
                 dropIndex={dropIndicator?.status === TicketStatus.Ejecucion ? dropIndicator.index : -1}
                 onDeleteTicket={onDeleteTicket}
                 onCompleteTicket={onCompleteTicket}
+                isViewOnly={isViewOnly}
             />
             <KanbanColumn
                 title={STATUS_TITLES.terminado}
@@ -161,6 +165,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({ tickets, categories, onTicketOr
                 dropIndex={dropIndicator?.status === TicketStatus.Terminado ? dropIndicator.index : -1}
                 onDeleteTicket={onDeleteTicket}
                 onCompleteTicket={onCompleteTicket}
+                isViewOnly={isViewOnly}
             />
         </div>
     );

@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Ticket, Categories, TicketStatus } from '../types';
 import TicketCard from './TicketCard';
@@ -9,9 +10,10 @@ interface CategoryViewProps {
     onOpenModal: (id: number) => void;
     onDeleteTicket: (id: number) => void;
     onCompleteTicket: (id: number) => void;
+    isViewOnly: boolean;
 }
 
-const CategoryView: React.FC<CategoryViewProps> = ({ tickets, categories, onOpenModal, onDeleteTicket, onCompleteTicket }) => {
+const CategoryView: React.FC<CategoryViewProps> = ({ tickets, categories, onOpenModal, onDeleteTicket, onCompleteTicket, isViewOnly }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {Object.entries(categories).map(([catName, category]) => {
@@ -43,6 +45,7 @@ const CategoryView: React.FC<CategoryViewProps> = ({ tickets, categories, onOpen
                                             onDragStart={() => {}} 
                                             onDelete={onDeleteTicket}
                                             onComplete={onCompleteTicket}
+                                            isViewOnly={isViewOnly}
                                         />
                                     ))}
                                 </div>
@@ -65,6 +68,7 @@ const CategoryView: React.FC<CategoryViewProps> = ({ tickets, categories, onOpen
                                             onDragStart={() => {}}
                                             onDelete={onDeleteTicket}
                                             onComplete={onCompleteTicket}
+                                            isViewOnly={isViewOnly}
                                         />
                                     ))}
                                  </div>

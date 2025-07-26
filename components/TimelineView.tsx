@@ -1,4 +1,5 @@
 
+
 import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react';
 import { Ticket, Categories, ProjectType, TicketStatus } from '../types';
 
@@ -14,6 +15,7 @@ interface TimelineViewProps {
     allowTeamParallelism: boolean;
     prioritizeExecuting: boolean;
     avoidTimelineGaps: boolean;
+    isViewOnly: boolean;
 }
 
 interface DragState {
@@ -60,6 +62,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     allowTeamParallelism, 
     prioritizeExecuting,
     avoidTimelineGaps,
+    isViewOnly,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [dragState, setDragState] = useState<DragState | null>(null);
@@ -361,7 +364,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     }, [dragState, handleMouseMove, handleMouseUp]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>, ticket: Ticket, interactionType: 'move' | 'resize') => {
-        if (e.button !== 0) return;
+        if (isViewOnly || e.button !== 0) return;
         e.preventDefault();
         e.stopPropagation();
 
@@ -378,7 +381,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
             ghostX: e.clientX,
             ghostY: e.clientY,
         });
-    }, []);
+    }, [isViewOnly]);
 
     const getTicketRenderData = (ticket: Ticket) => {
         const startDate = new Date(`${ticket.startDate}T12:00:00Z`);
@@ -415,7 +418,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
         const isExecuting = ticket.status === TicketStatus.Ejecucion;
         
         let verticalOffset = top;
-        if (isGhost && allowTeamParallelism && containerRef.current) {
+        if (isGhost && allowTeamParallelism && containerRef.current && dragState?.ticketId === ticket.id) { // Only calculate dynamic vertical offset for the dragged item
             const containerRect = containerRef.current.getBoundingClientRect();
             let accumulatedHeight = 0;
             for (const team of teams) {
@@ -434,23 +437,28 @@ const TimelineView: React.FC<TimelineViewProps> = ({
             }
         }
 
-
         if (isGhost) {
+            const isTheDraggedOne = dragState?.ticketId === ticket.id;
+            const ghostClassName = isTheDraggedOne
+                ? "absolute border-2 border-dashed border-blue-500 rounded bg-gray-800/50 flex items-center px-2 pointer-events-none"
+                : "absolute rounded bg-black/30 flex items-center px-2 pointer-events-none";
+
             return (
                 <div key={`ghost-${ticket.id}`}
-                     className="absolute border-2 border-dashed border-blue-500 rounded bg-gray-800/50 flex items-center px-2 pointer-events-none"
+                     className={ghostClassName}
                      style={{
                          top: `${verticalOffset}px`,
                          left: `${renderData.left}px`,
                          width: `${renderData.width}px`,
                          height: `${ROW_HEIGHT}px`,
-                         zIndex: 40,
-                         opacity: 0.8
+                         zIndex: isTheDraggedOne ? 45 : 40,
+                         opacity: isTheDraggedOne ? 0.9 : 0.7,
+                         transition: 'top 150ms ease-out, left 150ms ease-out',
                      }}
                 >
                     <div className="flex items-center gap-2 whitespace-nowrap">
                         {isExecuting && <ExecutingSeal />}
-                        <div className="text-white text-xs"><span className="font-semibold">{ticket.id}</span> {ticket.title}</div>
+                        <div className="text-white text-xs" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}><span className="font-semibold">{ticket.id}</span> {ticket.title}</div>
                     </div>
                 </div>
             );
@@ -519,10 +527,12 @@ const TimelineView: React.FC<TimelineViewProps> = ({
         <div className="grid grid-cols-1">
             <div className="bg-gray-800/50 p-4 rounded-lg">
                 <div className="flex items-center gap-4 mb-4 flex-wrap">
-                     <button onClick={onOpenSettings} className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 flex items-center gap-2 flex-shrink-0">
-                        <SettingsIcon />
-                        Configurar
-                    </button>
+                     {!isViewOnly && (
+                        <button onClick={onOpenSettings} className="px-3 py-1 rounded-md text-sm font-medium text-gray-300 bg-gray-700/50 hover:bg-gray-700 flex items-center gap-2 flex-shrink-0">
+                            <SettingsIcon />
+                            Configurar
+                        </button>
+                     )}
                     <div className="ml-auto flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-300">Zoom:</span>
