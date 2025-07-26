@@ -17,6 +17,10 @@ const ShareIcon = () => (
     </svg>
 );
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 661afa0d7df8b69a452d0a2f1381e20ed82775d6
 const Header: React.FC<HeaderProps> = ({ activeView, onViewChange, onManageCategories, onManageTeams, onShowArchive, isViewOnly, onShare }) => {
     const navButtonClass = (view: View) =>
         `px-3 py-1 rounded-md text-sm font-medium transition-colors ${
