@@ -12,13 +12,19 @@ interface ArchiveModalProps {
 
 const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, tickets, categories }) => {
     const finishedTickets = (tickets || [])
-        .filter(t => t?.status === 'terminado' && t?.completionDate)
+        .filter((t): t is Ticket => !!(t && t.status === 'terminado' && t.completionDate))
         .sort((a, b) => {
-            // Defensive sort to prevent crash if undefined tickets slip through filter
-            if (!a?.completionDate || !b?.completionDate) {
+            if (!a.completionDate || !b.completionDate) return 0;
+            try {
+                 const dateB = new Date(b.completionDate).getTime();
+                 const dateA = new Date(a.completionDate).getTime();
+                 if (isNaN(dateB)) return 1;
+                 if (isNaN(dateA)) return -1;
+                 return dateB - dateA;
+            } catch (e) {
+                console.error("Failed to sort tickets by date", a, b);
                 return 0;
             }
-            return new Date(b.completionDate).getTime() - new Date(a.completionDate).getTime();
         });
     
     const categoryColor = (catName: string) => categories[catName]?.color || '#5e5e5e';
